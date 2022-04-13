@@ -100,7 +100,7 @@ function App() {
               <Input
                 type="text"
                 {...register("q")}
-                placeholder="Busca imagenes"
+                placeholder="Autos, campos, etc... - Buscar"
               />
             </FormControl>
             <FormControl width="200px">
