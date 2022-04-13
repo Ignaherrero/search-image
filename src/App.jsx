@@ -103,18 +103,6 @@ function App() {
                 placeholder="Busca imagenes"
               />
             </FormControl>
-            <Flex justifyContent="center" marginTop={4} marginBottom={10}>
-              <ButtonGroup>
-                <Button onClick={() => handleReturnAPage()}>Atras</Button>
-                <Text>{page}</Text>
-                <Button
-                  isLoading={isLoading}
-                  onClick={() => handleChangePage()}
-                >
-                  Siguiente
-                </Button>
-              </ButtonGroup>
-            </Flex>
             <FormControl width="200px">
               <Select {...register("category", { required: true })}>
                 <option value="backgrounds">backgrounds</option>
