@@ -4,7 +4,6 @@ import {
   ButtonGroup,
   Flex,
   FormControl,
-  Grid,
   Heading,
   HStack,
   Image,
@@ -12,8 +11,8 @@ import {
   Select,
   Text,
 } from "@chakra-ui/react";
-import { useContext, useEffect, useReducer, useRef, useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { Link } from "react-router-dom";
 import { ContextImage } from "./image-context";
@@ -23,52 +22,64 @@ function App() {
     handleSubmit,
     register,
     formState: { errors },
+    getValues,
   } = useForm();
-  const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const elementRef = useRef();
-  const context = useContext(ContextImage);
+  const { image, setImages } = useContext(ContextImage);
+  const [page, setPage] = useState(1);
 
-  const getData = async (values = { category: "", q: "" }, page = 1) => {
+  const getData = async () => {
     setIsLoading(true);
     const response = await fetch(
-      `https://pixabay.com/api/?page&${
-        values.category && `category=${values.category}`
-      }${values.q && `&q=${values.q}`}${
-        page && `&page=${page}`
+      `https://pixabay.com/api/?${
+        getValues("category") && `category=${getValues("category")}`
+      }${getValues("q") && `&q=${getValues("q")}`}&page=${
+        getValues("q").length > 0 ? 1 : page
       }&key=23015774-8905aaab4483ea57e236a976a&lang=es&safesearch=true`
     );
     const data = await response.json();
-    context.setImages(data.hits);
-    setData(data.hits);
+    setImages(data.hits);
     setIsLoading(false);
+    if (getValues("q").length > 0) {
+      setPage(1);
+    }
     elementRef.current.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(() => {
-    getData();
-  }, [page]);
 
   const onSubmit = (values) => {
     getData(values);
   };
 
-  const handleChangePage = (values) => {
+  const handleChangePage = () => {
     setPage(page + 1);
-    getData(values, page);
   };
 
-  const handleReturnAPage = (values) => {
+  const handleReturnAPage = () => {
     setPage(page - 1);
-    getData(values, page);
   };
 
   const handleChange = (values) => {
     setPage(1);
     console.log(values);
-    getData(values);
   };
+
+  useEffect(() => {
+    fetch(
+      `https://pixabay.com/api/?${
+        getValues("category") && `category=${getValues("category")}`
+      }${
+        getValues("q") && `&q=${getValues("q")}`
+      }&page=${page}&key=23015774-8905aaab4483ea57e236a976a&lang=es&safesearch=true`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setImages(data.hits);
+        setIsLoading(false);
+        elementRef.current.scrollIntoView({ behavior: "smooth" });
+      })
+      .catch((err) => console.log(err));
+  }, [page]);
 
   return (
     <>
@@ -92,6 +103,18 @@ function App() {
                 placeholder="Busca imagenes"
               />
             </FormControl>
+            <Flex justifyContent="center" marginTop={4} marginBottom={10}>
+              <ButtonGroup>
+                <Button onClick={() => handleReturnAPage()}>Atras</Button>
+                <Text>{page}</Text>
+                <Button
+                  isLoading={isLoading}
+                  onClick={() => handleChangePage()}
+                >
+                  Siguiente
+                </Button>
+              </ButtonGroup>
+            </Flex>
             <FormControl width="200px">
               <Select {...register("category", { required: true })}>
                 <option value="backgrounds">backgrounds</option>
@@ -127,7 +150,7 @@ function App() {
       <Box maxWidth="100%">
         <ResponsiveMasonry columnsCountBreakPoints={{ 350: 1, 750: 2, 900: 3 }}>
           <Masonry>
-            {data.map((item) => (
+            {image.map((item) => (
               <Link to={`/d/${item.id}`} key={crypto.randomUUID()}>
                 <Image
                   src={item.webformatURL}
@@ -148,12 +171,9 @@ function App() {
       </Box>
       <Flex justifyContent="center" marginTop={4} marginBottom={10}>
         <ButtonGroup>
-          <Button onClick={handleSubmit(handleReturnAPage)}>Atras</Button>
+          <Button onClick={() => handleReturnAPage()}>Atras</Button>
           <Text>{page}</Text>
-          <Button
-            isLoading={isLoading}
-            onClick={handleSubmit(handleChangePage)}
-          >
+          <Button isLoading={isLoading} onClick={() => handleChangePage()}>
             Siguiente
           </Button>
         </ButtonGroup>
